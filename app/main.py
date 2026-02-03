@@ -26,7 +26,6 @@ def get_users():
         return jsonify([dict(user) for user in users])
 
 @app.route("/users", methods=["PATCH"])
-@app.route("/users", methods=["PATCH"])
 def update_user():
     if "user_id" not in session:
         return jsonify({"error": "user not logged in"}), 401
