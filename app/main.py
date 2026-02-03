@@ -1,9 +1,10 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, session
 import sqlite3
 from db import get_connection
 from werkzeug.security import generate_password_hash, check_password_hash
 
 app = Flask(__name__)
+app.secret_key= " "
 
 @app.route("/users", methods=["POST"])
 def insert_user():
@@ -61,6 +62,8 @@ def login():
         if not check_password_hash(user["password"], password):
             return jsonify({"error": "wrong password"}), 400
 
+        session["user_id"] = user["id"]
+
         return jsonify({
             "message": "Login successful",
             "user": {
@@ -69,6 +72,18 @@ def login():
                 "email": user["email"]
             }
         }), 200
+
+@app.route("/me", methods=["GET"])
+def me():
+    if "user_id" not in session:
+        return jsonify({"error": "user not logged in"}), 401
+
+    return jsonify({"message" : "You are logged in"}), 200
+
+@app.route("/logout", methods=["POST"])
+def logout_user():
+    session.clear()
+    return jsonify({"message": "Logout successful"}), 200
 
 def validar_user(user: dict):
     required_fields = ["name", "email", "password"]
