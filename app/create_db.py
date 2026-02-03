@@ -1,4 +1,3 @@
-# create_db.py
 import sqlite3
 from pathlib import Path
 
@@ -10,13 +9,14 @@ def create_tables():
     cursor = conn.cursor()
 
     cursor.executescript("""
-    CREATE TABLE IF NOT EXISTS users (
+    CREATE TABLE users (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         name TEXT NOT NULL,
-        email TEXT UNIQUE NOT NULL
+        email TEXT UNIQUE NOT NULL,
+        password TEXT NOT NULL
     );
 
-    CREATE TABLE IF NOT EXISTS books (
+    CREATE TABLE books (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         title TEXT NOT NULL,
         author TEXT NOT NULL,
@@ -28,7 +28,6 @@ def create_tables():
     conn.commit()
     conn.close()
 
-
 if __name__ == "__main__":
     create_tables()
-    print("Banco e tabelas criados.")
+    print("Banco criado com sucesso.")
