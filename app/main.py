@@ -1,10 +1,11 @@
 from flask import Flask, request, jsonify, session
 import sqlite3
+import os
 from db import get_connection
 from werkzeug.security import generate_password_hash, check_password_hash
 
 app = Flask(__name__)
-app.secret_key= " "
+app.secret_key= os.urandom(24)
 
 @app.route("/users", methods=["POST"])
 def insert_user():
@@ -23,6 +24,50 @@ def get_users():
         users = cursor.fetchall()
 
         return jsonify([dict(user) for user in users])
+
+@app.route("/users", methods=["PATCH"])
+@app.route("/users", methods=["PATCH"])
+def update_user():
+    if "user_id" not in session:
+        return jsonify({"error": "user not logged in"}), 401
+
+    data = request.get_json()
+    if not data:
+        return jsonify({"error": "no body"}), 400
+
+    fields = []
+    values = []
+
+    if "name" in data:
+        fields.append("name = ?")
+        values.append(data["name"])
+
+    if "email" in data:
+        if "@" not in data["email"] or "." not in data["email"]:
+            return jsonify({"error": "invalid email"}), 400
+        fields.append("email = ?")
+        values.append(data["email"])
+
+    if "password" in data:
+        if len(data["password"]) < 8:
+            return jsonify({"error": "password must be at least 8 characters"}), 400
+        password_hash = generate_password_hash(data["password"])
+        fields.append("password = ?")
+        values.append(password_hash)
+
+    if not fields:
+        return jsonify({"error": "no fields to update"}), 400
+
+    values.append(session["user_id"])
+
+    with get_connection() as conn:
+        cursor = conn.cursor()
+        cursor.execute(
+            f"UPDATE users SET {', '.join(fields)} WHERE id = ?",
+            tuple(values)
+        )
+
+    return jsonify({"message": "User updated successfully"}), 200
 
 
 @app.route("/users/<int:id>", methods=["DELETE"])

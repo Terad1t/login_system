@@ -3,8 +3,8 @@ from tkinter import messagebox
 import requests
 
 API = "http://127.0.0.1:5000"
-
 session = requests.Session()
+
 root = tk.Tk()
 
 name_entry = tk.Entry(root)
