@@ -31,9 +31,9 @@ o entendimento de SQL.
 1) Backend (API)
 - Comandos:
 - docker build -t login-api .
-- docker run -p 5000:5000 login-api
----
-- A API ficará disponível em:
+- docker run -p 5000:5000 login-api 
+
+A API ficará disponível em:
 - http://127.0.0.1:5000
 ---
 
@@ -49,7 +49,7 @@ Funcionalidades disponíveis:
 # ENDPOINTS PRINCIPAIS
 - POST /users  -> cadastro de usuário
 - POST /login  -> autenticação
-- GET  /users  -> listagem de usuários (sem senha)
+- GET /users  -> listagem de usuários (sem senha)
 
 
 # PRÓXIMOS PASSOS
