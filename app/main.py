@@ -3,7 +3,6 @@ import sqlite3
 from db import get_connection
 from werkzeug.security import generate_password_hash, check_password_hash
 
-
 app = Flask(__name__)
 
 @app.route("/users", methods=["POST"])
@@ -74,6 +73,9 @@ def validar_user(user: dict):
     if len(user["password"]) < 8:
         return jsonify({"error": "password must be at least 8 characters"}), 400
 
+    if "@" not in user["email"] or "." not in user["email"]:
+        return jsonify({"error": "invalid email"}), 400
+
     password_hash = generate_password_hash(user["password"])
 
     try:
@@ -96,7 +98,6 @@ def validar_user(user: dict):
             "email": user["email"]
         }
     }), 201
-
 
 if __name__ == "__main__":
     app.run(debug=True)
