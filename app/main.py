@@ -23,19 +23,21 @@ def get_users():
 
         return jsonify([dict(user) for user in users])
 
-@app.route("/users", methods=["DELETE"])
-def remove_user():
+
+@app.route("/users/<int:id>", methods=["DELETE"])
+def remove_user(id):
     with get_connection() as conn:
         cursor = conn.cursor()
-        user = cursor.execute("SELECT name, email, password FROM users WHERE id = ?", (id,)).fetchone()
+
+        # Verificar se o usuário existe
+        user = cursor.execute("SELECT * FROM users WHERE id = ?", (id,)).fetchone()
         if not user:
-            return jsonify({"error": "user does not exist"}), 400
+            return jsonify({"error": "user does not exist"}), 404
 
+        # Remover o usuário
         conn.execute("DELETE FROM users WHERE id = ?", (id,))
-        conn.commit()
-        conn.close()
-
         return jsonify({"message": "User deleted successfully"}), 200
+
 
 @app.route("/login", methods=["POST"])
 def login():
