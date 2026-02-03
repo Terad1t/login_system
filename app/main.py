@@ -30,12 +30,10 @@ def remove_user(id):
     with get_connection() as conn:
         cursor = conn.cursor()
 
-        # Verificar se o usuário existe
         user = cursor.execute("SELECT * FROM users WHERE id = ?", (id,)).fetchone()
         if not user:
             return jsonify({"error": "user does not exist"}), 404
 
-        # Remover o usuário
         conn.execute("DELETE FROM users WHERE id = ?", (id,))
         return jsonify({"message": "User deleted successfully"}), 200
 
