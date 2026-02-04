@@ -29,9 +29,10 @@ o entendimento de SQL.
 # COMO USAR
 
 1) Backend (API)
-- Comandos:
+
+Comandos:
 - docker build -t login-api .
-- docker run -p 5000:5000 login-api 
+- docker run -p 5000:5000 login-api
 
 A API ficará disponível em:
 - http://127.0.0.1:5000
@@ -41,10 +42,21 @@ A API ficará disponível em:
 - Comando:
 - python interface.py
 
-Funcionalidades disponíveis:
+---
+
+3) Ao subir a API e rodar a interface.
+- Basta fazer o seu cadastro, fazer o seu login e você já está pronto para usar o sistema!
+
+---
+
+4) Funcionalidades
+
+Funcionalidades disponíveis no sistema:
 - Cadastro de usuário
 - Login com verificação de senha
-
+- Criação de livros via POSTMAN ou pelo próprio sistema.
+- Atualizar usuário (via POSTMAN) ou livro (via POSTMAN ou pela API)
+- Deletar usuario (via POSTMAN) ou livro (via POSTMAN ou pela API)
 
 # ENDPOINTS PRINCIPAIS
 - POST /users  -> cadastro de usuário
