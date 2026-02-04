@@ -3,9 +3,11 @@ import sqlite3
 import os
 from db import get_connection
 from werkzeug.security import generate_password_hash, check_password_hash
+from books import books_bp
 
 app = Flask(__name__)
 app.secret_key= os.urandom(24)
+app.register_blueprint(books_bp)
 
 @app.route("/users", methods=["POST"])
 def insert_user():
