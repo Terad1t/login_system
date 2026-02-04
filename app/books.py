@@ -17,12 +17,19 @@ def insert_book():
 
 @books_bp.route("/books", methods=["GET"])
 def get_books():
+    if "user_id" not in session:
+        return jsonify({"error": "user not logged in"}), 401
+
     with get_connection() as conn:
         cursor = conn.cursor()
-        cursor.execute("SELECT id, title, author, user_id FROM books")
+        cursor.execute(
+            "SELECT id, title, author FROM books WHERE user_id = ?",
+            (session["user_id"],)
+        )
         books = cursor.fetchall()
 
     return jsonify([dict(book) for book in books])
+
 
 @books_bp.route("/books/<int:id>", methods=["PATCH"])
 def update_book(id):
@@ -72,15 +79,22 @@ def update_book(id):
 
 @books_bp.route("/books/<int:id>", methods=["DELETE"])
 def delete_book(id):
+    if "user_id" not in session:
+        return jsonify({"error": "user not logged in"}), 401
+
     with get_connection() as conn:
         cursor = conn.cursor()
 
-        book = cursor.execute("SELECT * FROM books WHERE id = ?", (id,)).fetchone()
-        if not book:
-            return jsonify({"error" : "book does not exists"}), 404
+        result = cursor.execute(
+            "DELETE FROM books WHERE id = ? AND user_id = ?",
+            (id, session["user_id"])
+        )
 
-        conn.execute("DELETE FROM books WHERE id = ?", (id,))
-        return jsonify(({"message": "Book deleted successfully"})), 200
+        if result.rowcount == 0:
+            return jsonify({"error": "book not found or not allowed"}), 404
+
+    return jsonify({"message": "Book deleted successfully"}), 200
+
 
 def validate_book(book: dict):
     required_fields = ["title", "author"]
