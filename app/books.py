@@ -70,6 +70,18 @@ def update_book(id):
 
     return jsonify({"message": "Book updated successfully"}), 200
 
+@books_bp.route("/books/<int:id>", methods=["DELETE"])
+def delete_book(id):
+    with get_connection() as conn:
+        cursor = conn.cursor()
+
+        book = cursor.execute("SELECT * FROM books WHERE id = ?", (id,)).fetchone()
+        if not book:
+            return jsonify({"error" : "book does not exists"}), 404
+
+        conn.execute("DELETE FROM books WHERE id = ?", (id,))
+        return jsonify(({"message": "Book deleted successfully"})), 200
+
 def validate_book(book: dict):
     required_fields = ["title", "author"]
 
