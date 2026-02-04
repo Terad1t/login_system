@@ -50,6 +50,10 @@ Funcionalidades disponíveis:
 - POST /users  -> cadastro de usuário
 - POST /login  -> autenticação
 - GET /users  -> listagem de usuários (sem senha)
+- DELETE /users/id  -> deleta usuário
+- PATCH /users/id  -> atualiza usuário
+- POST /books  -> cadastra livro
+- GET /books  -> listagem de livros (por id)
 
 
 # PRÓXIMOS PASSOS
@@ -58,3 +62,4 @@ Funcionalidades disponíveis:
 - Adicionar testes automatizados
 - Melhorar layout da interface
 - Deploy da API em ambiente cloud
+
