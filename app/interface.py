@@ -1,32 +1,42 @@
-import tkinter as tk
-from tkinter import messagebox
 import requests
+import ttkbootstrap as tb
+from ttkbootstrap.constants import *
+from tkinter import messagebox
+from ttkbootstrap.widgets.tableview import Tableview
+
 
 API = "http://127.0.0.1:5000"
 session = requests.Session()
 
-root = tk.Tk()
-root.title("Sistema")
-root.geometry("400x350")
-root.resizable(False, False)
+root = tb.Window(
+    title="Sistema de Livros",
+    themename="darkly",
+    size=(450, 520),
+    resizable=(False, False)
+)
 
-login_frame = tk.Frame(root)
-dashboard_frame = tk.Frame(root)
+login_frame = tb.Frame(root, padding=25)
+dashboard_frame = tb.Frame(root, padding=20)
 
-login_frame.pack(fill="both", expand=True)
+login_frame.pack(fill=BOTH, expand=YES)
 
-name_entry = tk.Entry(login_frame)
-email_entry = tk.Entry(login_frame)
-password_entry = tk.Entry(login_frame, show="*")
+tb.Label(
+    login_frame,
+    text="Login",
+    font=("Segoe UI", 20, "bold")
+).grid(row=0, column=0, columnspan=2, pady=(0, 20))
 
-tk.Label(login_frame, text="Nome").pack()
-name_entry.pack()
+tb.Label(login_frame, text="Nome").grid(row=1, column=0, sticky=W)
+name_entry = tb.Entry(login_frame, width=30)
+name_entry.grid(row=1, column=1, pady=5)
 
-tk.Label(login_frame, text="Email").pack()
-email_entry.pack()
+tb.Label(login_frame, text="Email").grid(row=2, column=0, sticky=W)
+email_entry = tb.Entry(login_frame, width=30)
+email_entry.grid(row=2, column=1, pady=5)
 
-tk.Label(login_frame, text="Senha").pack()
-password_entry.pack()
+tb.Label(login_frame, text="Senha").grid(row=3, column=0, sticky=W)
+password_entry = tb.Entry(login_frame, width=30, show="*")
+password_entry.grid(row=3, column=1, pady=5)
 
 def login():
     email = email_entry.get()
@@ -41,12 +51,11 @@ def login():
             f"{API}/login",
             json={"email": email, "password": password}
         )
-        data = response.json()
 
         if response.status_code == 200:
-            show_dashboard(data["user"]["name"])
+            show_dashboard(response.json()["user"]["name"])
         else:
-            messagebox.showerror("Erro", data.get("error", "Erro desconhecido"))
+            messagebox.showerror("Erro", response.json().get("error"))
 
     except requests.exceptions.ConnectionError:
         messagebox.showerror("Erro", "API Flask não está rodando")
@@ -61,60 +70,79 @@ def register():
         return
 
     try:
-        response = requests.post(
+        response = session.post(
             f"{API}/users",
             json={"name": name, "email": email, "password": password}
         )
 
-        data = response.json()
-
         if response.status_code == 201:
             messagebox.showinfo("Sucesso", "Usuário criado com sucesso")
         else:
-            messagebox.showerror("Erro", data.get("error", "Erro desconhecido"))
+            messagebox.showerror("Erro", response.json().get("error"))
 
     except requests.exceptions.ConnectionError:
         messagebox.showerror("Erro", "API Flask não está rodando")
 
-tk.Button(login_frame, text="Entrar", width=20, command=login).pack(pady=5)
-tk.Button(login_frame, text="Cadastrar", width=20, command=register).pack(pady=5)
+tb.Button(
+    login_frame,
+    text="Entrar",
+    bootstyle=SUCCESS,
+    width=30,
+    command=login
+).grid(row=4, column=0, columnspan=2, pady=(20, 5))
 
-welcome_label = tk.Label(dashboard_frame, text="", font=("Arial", 14))
-welcome_label.pack(pady=20)
+tb.Button(
+    login_frame,
+    text="Cadastrar",
+    bootstyle=PRIMARY,
+    width=30,
+    command=register
+).grid(row=5, column=0, columnspan=2)
 
-tk.Button(
+welcome_label = tb.Label(
     dashboard_frame,
-    text="Logout",
-    width=20,
-    command=lambda: logout()
-).pack()
+    text="",
+    font=("Segoe UI", 16, "bold")
+)
+welcome_label.pack(pady=(0, 15))
 
-def show_login():
-    dashboard_frame.pack_forget()
-    login_frame.pack(fill="both", expand=True)
+tb.Label(dashboard_frame, text="Título do Livro").pack(anchor=W)
+book_title_entry = tb.Entry(dashboard_frame, width=40)
+book_title_entry.pack(pady=3)
 
-tk.Label(dashboard_frame, text="Título do livro").pack()
-book_title_entry = tk.Entry(dashboard_frame)
-book_title_entry.pack()
+tb.Label(dashboard_frame, text="Autor").pack(anchor=W)
+book_author_entry = tb.Entry(dashboard_frame, width=40)
+book_author_entry.pack(pady=3)
 
-tk.Label(dashboard_frame, text="Autor").pack()
-book_author_entry = tk.Entry(dashboard_frame)
-book_author_entry.pack()
+books_listbox = Tableview(
+    master=dashboard_frame,
+    coldata=[
+        {"text": "ID", "stretch": False},
+        {"text": "Título", "stretch": True},
+        {"text": "Autor", "stretch": True},
+    ],
+    rowdata=[],
+    paginated=False,
+    searchable=False,
+    height=8,
+    bootstyle=PRIMARY
+)
 
-# --- BOOK LIST ---
-books_listbox = tk.Listbox(dashboard_frame, width=45)
-books_listbox.pack(pady=10)
+books_listbox.pack(fill=BOTH, expand=YES, pady=10)
 
 def load_books():
-    books_listbox.delete(0, tk.END)
+    # remove todas as linhas corretamente
+    for row in books_listbox.get_rows():
+        books_listbox.delete_row(row.iid)
 
     try:
         response = session.get(f"{API}/books")
+
         if response.status_code == 200:
             for book in response.json():
-                books_listbox.insert(
-                    tk.END,
-                    f"{book['id']} - {book['title']} ({book['author']})"
+                books_listbox.insert_row(
+                    "end",
+                    [book["id"], book["title"], book["author"]]
                 )
         else:
             messagebox.showerror("Erro", "Erro ao carregar livros")
@@ -122,11 +150,16 @@ def load_books():
     except requests.exceptions.ConnectionError:
         messagebox.showerror("Erro", "API Flask não está rodando")
 
+
 def show_dashboard(user_name):
     login_frame.pack_forget()
     welcome_label.config(text=f"Bem-vindo, {user_name}")
-    dashboard_frame.pack(fill="both", expand=True)
+    dashboard_frame.pack(fill=BOTH, expand=YES)
     load_books()
+
+def show_login():
+    dashboard_frame.pack_forget()
+    login_frame.pack(fill=BOTH, expand=YES)
 
 def create_book():
     title = book_title_entry.get()
@@ -144,8 +177,8 @@ def create_book():
 
         if response.status_code == 201:
             messagebox.showinfo("Sucesso", "Livro criado com sucesso")
-            book_title_entry.delete(0, tk.END)
-            book_author_entry.delete(0, tk.END)
+            book_title_entry.delete(0, END)
+            book_author_entry.delete(0, END)
             load_books()
         else:
             messagebox.showerror("Erro", response.json().get("error"))
@@ -153,41 +186,38 @@ def create_book():
     except requests.exceptions.ConnectionError:
         messagebox.showerror("Erro", "API Flask não está rodando")
 
-tk.Button(dashboard_frame, text="Criar Livro", command=create_book).pack(pady=5)
-
 def on_book_select(event):
-    selection = books_listbox.curselection()
-    if not selection:
+    selected = books_listbox.get_selected_rows()
+
+    if not selected:
         return
 
-    text = books_listbox.get(selection[0])
-    _, rest = text.split(" - ", 1)
-    title, author = rest.rsplit(" (", 1)
-    author = author.replace(")", "")
+    row = selected[0].values
+    book_id, title, author = row
 
-    book_title_entry.delete(0, tk.END)
-    book_author_entry.delete(0, tk.END)
+    book_title_entry.delete(0, END)
+    book_author_entry.delete(0, END)
+
     book_title_entry.insert(0, title)
     book_author_entry.insert(0, author)
 
-books_listbox.bind("<<ListboxSelect>>", on_book_select)
 
+books_listbox.view.bind("<<TreeviewSelect>>", on_book_select)
 
 def update_book():
-    selection = books_listbox.curselection()
-    if not selection:
+    selected = books_listbox.get_selected_rows()
+
+    if not selected:
         messagebox.showerror("Erro", "Selecione um livro")
         return
 
-    book_id = books_listbox.get(selection[0]).split(" - ")[0]
-    title = book_title_entry.get()
-    author = book_author_entry.get()
+    book_id = selected[0].values[0]
 
     data = {}
-    if title:
-        data["title"] = title
-    if author:
-        data["author"] = author
+    if book_title_entry.get():
+        data["title"] = book_title_entry.get()
+    if book_author_entry.get():
+        data["author"] = book_author_entry.get()
 
     if not data:
         messagebox.showerror("Erro", "Informe algo para atualizar")
@@ -205,15 +235,15 @@ def update_book():
     except requests.exceptions.ConnectionError:
         messagebox.showerror("Erro", "API Flask não está rodando")
 
-tk.Button(dashboard_frame, text="Atualizar Livro", command=update_book).pack(pady=5)
 
 def delete_book():
-    selection = books_listbox.curselection()
-    if not selection:
+    selected = books_listbox.get_selected_rows()
+
+    if not selected:
         messagebox.showerror("Erro", "Selecione um livro")
         return
 
-    book_id = books_listbox.get(selection[0]).split(" - ")[0]
+    book_id = selected[0].values[0]
 
     if not messagebox.askyesno("Confirmação", "Deseja deletar o livro?"):
         return
@@ -230,21 +260,27 @@ def delete_book():
     except requests.exceptions.ConnectionError:
         messagebox.showerror("Erro", "API Flask não está rodando")
 
-tk.Button(dashboard_frame, text="Deletar Livro", command=delete_book).pack(pady=5)
 
 def logout():
     try:
         response = session.post(f"{API}/logout")
 
         if response.status_code == 200:
-            books_listbox.delete(0, tk.END)
+            for row in books_listbox.get_rows():
+                books_listbox.delete_row(row.iid)
+
             show_login()
             messagebox.showinfo("Logout", "Logout realizado com sucesso")
         else:
-            messagebox.showerror("Erro", "Falha no Logout")
+            messagebox.showerror("Erro", "Falha no logout")
 
     except requests.exceptions.ConnectionError:
         messagebox.showerror("Erro", "API Flask não está rodando")
 
+
+tb.Button(dashboard_frame, text="Criar Livro", bootstyle=SUCCESS, command=create_book).pack(pady=3)
+tb.Button(dashboard_frame, text="Atualizar Livro", bootstyle=WARNING, command=update_book).pack(pady=3)
+tb.Button(dashboard_frame, text="Deletar Livro", bootstyle=DANGER, command=delete_book).pack(pady=3)
+tb.Button(dashboard_frame, text="Logout", bootstyle=SECONDARY, command=logout).pack(pady=10)
 
 root.mainloop()
